@@ -1,0 +1,8 @@
+<launch>
+
+    <!--<node name="iat_cut" pkg="aubo_grasp" type="iat_cut" respawn="false" output="screen">-->
+    <!--<node name="tts_subscribe" pkg="aubo_grasp" type="tts_subscribe" name="tts_subscribe" output="screen"/>-->
+    <!--<node name="e5_voice_controlV3" pkg="aubo_grasp" type="e5_voice_controlV3" respawn="false" output="screen">-->
+    <node name="e5_voice_controlV3" pkg="aubo_grasp" type="e5_voice_controlV3" respawn="false" output="screen">
+  </node>
+</launch>

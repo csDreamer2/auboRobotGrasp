@@ -1,0 +1,6 @@
+<launch>
+
+  <node name="voice_test" pkg="robot_voice" type="voice_control_test" respawn="false" output="screen">
+  </node>
+
+</launch>

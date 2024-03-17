@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="aubo_grasp" type="chatgpt" name="chatgpt" output="screen"/>
+</launch>

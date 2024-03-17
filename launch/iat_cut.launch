@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="aubo_grasp" type="iat_cut" name="iat_cut" output="screen"/>
+</launch>
