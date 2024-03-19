@@ -11,6 +11,7 @@
 #include "geometry_msgs/Twist.h"
 #include "robotiq_2f_gripper_control/Robotiq2FGripper_robot_output.h"
 #include "aubo_grasp/graspMessage.h"
+#include "aubo_grasp/followingMessage.h"
 
 //注意：语音识别和语音合成的中文编码为gb2312
 geometry_msgs::Twist twist;//可视化节点话题内容
@@ -18,8 +19,10 @@ ros::Publisher cmd_vel_pub;//可视化节点话题发布者
 std_msgs::String string_msg;//语音合成话题内容
 ros::Publisher tts_text_pub;//语音合成话题发布者
 
-aubo_grasp::graspMessage grasp_msg;// 抓取话题发布开关
+aubo_grasp::graspMessage grasp_msg;// 抓取话题发布消息
 ros::Publisher grasp_pub;//抓取话题发布者
+aubo_grasp::followingMessage following_msg;// 跟随物品话题发布消息
+ros::Publisher following_pub;//跟随物品话题发布者
 
 //定义全局变量
 int cmd_type = -1;//控制机械臂状况码
@@ -46,7 +49,11 @@ enum CommandType {
     EXIT_SYNC = 6,//退出同步
     GRIPPER_CLOSE = 11,//夹爪闭合
     GRIPPER_OPEN = 12,//夹爪打开
-    GRIPPER_ACTIVE = 13//激活夹爪
+    GRIPPER_ACTIVE = 13,//激活夹爪
+    FOLLOWING_BOTTLE = 14,//跟随瓶子
+    FOLLOWING_BOX = 15,//跟随盒子
+    FOLLOWING_CAN = 16,//跟随罐子
+    FOLLOWING_TAPE = 17,//跟随胶带
 };
 
 // 定义处理函数类型
@@ -65,6 +72,10 @@ void handleExitSync(const std::string& dataString);
 void handleGripperClose(const std::string& dataString);
 void handleGripperOpen(const std::string& dataString);
 void handleGripperActive(const std::string& dataString);
+void handleFollowingBottle(const std::string& dataString);
+void handleFollowingBox(const std::string& dataString);
+void handleFollowingCan(const std::string& dataString);
+void handleFollowingTape(const std::string& dataString);
 
 // 存储关键词和对应的处理函数以及命令类型
 std::map<std::string, std::pair<CommandHandler, CommandType>> commandMap = {
@@ -91,7 +102,11 @@ std::map<std::string, std::pair<CommandHandler, CommandType>> commandMap = {
     {"张开夹爪", {handleGripperOpen, GRIPPER_OPEN}},
     {"激活夹爪", {handleGripperActive, GRIPPER_ACTIVE}},
     {"激活甲状", {handleGripperActive, GRIPPER_ACTIVE}},
-    {"激活卡爪", {handleGripperActive, GRIPPER_ACTIVE}}
+    {"激活卡爪", {handleGripperActive, GRIPPER_ACTIVE}},
+    {"跟随瓶", {handleFollowingBottle, FOLLOWING_BOTTLE}},
+    {"跟随盒", {handleFollowingBox, FOLLOWING_BOX}},
+    {"跟随罐", {handleFollowingCan, FOLLOWING_CAN}},
+    {"跟随胶带", {handleFollowingTape, FOLLOWING_TAPE}},
 };
 
 //中文数字映射
@@ -334,6 +349,42 @@ void handleGripperActive(const std::string& dataString) {
     ROS_INFO("Received command: gripper active");
 }
 
+// 处理跟随瓶子命令
+void handleFollowingBottle(const std::string& dataString) {
+    const char* text;
+    text = "开始跟随瓶子";
+    string_msg.data = text;
+    tts_text_pub.publish(string_msg);
+    ROS_INFO("Received command: following bottle");
+}
+
+// 处理跟随盒子命令
+void handleFollowingBox(const std::string& dataString) {
+    const char* text;
+    text = "开始跟随盒子";
+    string_msg.data = text;
+    tts_text_pub.publish(string_msg);
+    ROS_INFO("Received command: following box");
+}
+
+// 处理跟随罐子命令
+void handleFollowingCan(const std::string& dataString) {
+    const char* text;
+    text = "开始跟随罐子";
+    string_msg.data = text;
+    tts_text_pub.publish(string_msg);
+    ROS_INFO("Received command: following can");
+}
+
+// 处理跟随胶带命令
+void handleFollowingTape(const std::string& dataString) {
+    const char* text;
+    text = "开始跟随胶带";
+    string_msg.data = text;
+    tts_text_pub.publish(string_msg);
+    ROS_INFO("Received command: following tape");
+}
+
 //夹爪控制函数，传入width
 void gripperControl(double width)
 {
@@ -413,6 +464,8 @@ int main(int argc, char* argv[])
     cmd_vel_pub = n.advertise<geometry_msgs::Twist>("cmd_vel", 1);//可视化节点话题发布
     //初始化抓取话题
     grasp_pub = n.advertise<aubo_grasp::graspMessage>("grasp", 10);
+    //初始化跟随话题
+    following_pub = n.advertise<aubo_grasp::followingMessage>("followingObject", 10);
     //获取当前机械臂的状态
     moveit::core::RobotStatePtr current_state = move_group.getCurrentState();
     std::vector<double> joint_group_positions;
@@ -526,6 +579,34 @@ int main(int argc, char* argv[])
         case 13:
             //激活夹爪
             activeGripper();
+            cmd_type = -1;
+            break;
+        case 14:
+            //设置机械臂跟随瓶子 发布跟随话题 type=bottle
+            following_msg.flag = true;
+            following_msg.type = "bottle";
+            following_pub.publish(following_msg);
+            cmd_type = -1;
+            break;
+        case 15:
+            //设置机械臂跟随盒子 发布跟随话题 type=box
+            following_msg.flag = true;
+            following_msg.type = "box";
+            following_pub.publish(following_msg);
+            cmd_type = -1;
+            break;
+        case 16:
+            //设置机械臂跟随罐子 发布跟随话题 type=can
+            following_msg.flag = true;
+            following_msg.type = "can";
+            following_pub.publish(following_msg);
+            cmd_type = -1;
+            break;
+        case 17:
+            //设置机械臂跟随胶带 发布跟随话题 type=sellotape
+            following_msg.flag = true;
+            following_msg.type = "sellotape";
+            following_pub.publish(following_msg);
             cmd_type = -1;
             break;
         default:

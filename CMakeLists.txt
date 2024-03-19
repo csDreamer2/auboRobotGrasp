@@ -72,6 +72,7 @@ add_message_files(
   FILES
   Images.msg
   graspMessage.msg
+  followingMessage.msg
 )
 
 ## Generate services in the 'srv' folder
